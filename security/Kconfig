@@ -295,6 +295,8 @@ config LSM
 
 source "security/Kconfig.hardening"
 
-source "security/baseband-guard/Kconfig"
+# Baseband-guard is disabled (CONFIG_BBG off) and its submodule is not checked
+# out; commenting the source keeps `make unisoc_defconfig` from requiring it.
+# source "security/baseband-guard/Kconfig"
 endmenu
 
