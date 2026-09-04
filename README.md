@@ -1,3 +1,28 @@
+# Max-StormKernel-Unisoc
+
+A custom Android kernel for the Unisoc **ums9230** (qogirl6) platform, based on
+Linux **5.4.254** (GKI), with **KernelSU-Next + SUSFS** support and a GitHub
+Actions CI build.
+
+## Credits
+
+This is a fork of
+**[maxsteeel/kernel_unisoc-5.4](https://github.com/maxsteeel/kernel_unisoc-5.4)**,
+with build/CI changes. All original work is credited to its respective authors.
+
+- **[maxsteeel](https://github.com/maxsteeel)** — the upstream fork: ums9230
+  5.4 kernel with KernelSU-Next + SUSFS integration.
+- **[KernelSU](https://github.com/tiann/KernelSU)** (tiann) and **KernelSU-Next**
+  — kernel-mode root solution (via the `KernelSU-Next` submodule, `susfs-legacy-test` branch).
+- **SUSFS** (simonpunk) — SUSFS v2.0.0 (`try_umount`, `sus_path`, `sus_mount`,
+  `sus_kstat`, `open_redirect`, etc.).
+- **[Baseband-guard](https://github.com/vc-teahouse/Baseband-guard)**
+  (vc-teahouse) — baseband security guard (disabled in this configuration).
+- **[Unisoc (Spreadtrum/SPRD)](https://www.unisoc.com)** — the original ums9230 kernel BSP.
+- **Linux kernel** — Linus Torvalds and the kernel community.
+- **Android Common Kernel** — Google.
+
+---
 # How do I submit patches to Android Common Kernels
 
 1. BEST: Make all of your changes to upstream Linux. If appropriate, backport to the stable releases.
