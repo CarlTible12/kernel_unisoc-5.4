@@ -1,0 +1,100 @@
+name: Build Kernel
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build unisoc (ums9230) kernel
+    # Pinned to 22.04 because this kernel's Makefile hardcodes clang-12/llvm-12
+    # (clang-12 is not packaged in Ubuntu 24.04).
+    runs-on: ubuntu-22.04
+    timeout-minutes: 300
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Submodules are initialized selectively below: only KernelSU-Next
+          # is compiled in (drivers/kernelsu -> ../KernelSU-Next/kernel).
+          # Baseband-guard and toolchain (proton-12) are unused and stay off.
+          submodules: false
+
+      - name: Checkout KernelSU-Next submodule
+        run: git submodule update --init KernelSU-Next
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang-12 \
+            lld-12 \
+            llvm-12 \
+            gcc-aarch64-linux-gnu \
+            binutils-aarch64-linux-gnu \
+            libc6-dev-arm64-cross \
+            cpio \
+            bc \
+            flex \
+            bison \
+            libssl-dev \
+            libelf-dev \
+            make \
+            git
+
+      - name: Verify toolchain
+        run: |
+          clang-12 --version | head -n 1
+          ld.lld-12 --version | head -n 1
+          aarch64-linux-gnu-gcc --version | head -n 1
+
+      # The runner is amd64, so ARCH=arm64 is passed explicitly. The
+      # cross-toolchain (CC=clang-12, CROSS_COMPILE=aarch64-linux-gnu-,
+      # LLVM=1) is already hardcoded in this tree's Makefile, so it needs no
+      # command-line override.
+      - name: Configure (unisoc_defconfig)
+        run: make ARCH=arm64 unisoc_defconfig
+
+      # `make` runs the default `all` target: vmlinux -> Image -> Image.gz,
+      # plus `dtbs` (base DTBs + SPRD overlay .dtbo) and `modules`.
+      # Note: CONFIG_MODVERSIONS must stay OFF — it's incompatible with thin
+      # LTO + ld.lld (genksyms enum-export breakage -> lld ABS32 link error).
+      - name: Build kernel
+        run: make ARCH=arm64 -j"$(nproc)"
+
+      - name: Show kernel info
+        run: |
+          ls -lh arch/arm64/boot/Image arch/arm64/boot/Image.gz
+          grep -a "Linux version" arch/arm64/boot/Image || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Max-StormKernel-Unisoc-ums9230
+          if-no-files-found: error
+          path: |
+            arch/arm64/boot/Image
+            arch/arm64/boot/Image.gz
+            arch/arm64/boot/dts/sprd/*.dtb
+            arch/arm64/boot/dts/sprd/*.dtbo
+
+      - name: Publish GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            arch/arm64/boot/Image
+            arch/arm64/boot/Image.gz
+            arch/arm64/boot/dts/sprd/*.dtb
+            arch/arm64/boot/dts/sprd/*.dtbo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
