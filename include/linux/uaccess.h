@@ -363,6 +363,21 @@ static inline int copy_to_kernel_nofault(void *dst, const void *src, size_t size
 extern long notrace probe_user_write(void __user *dst, const void *src, size_t size);
 extern long notrace __probe_user_write(void __user *dst, const void *src, size_t size);
 
+/*
+ * Compat: copy_from_user_nofault()/copy_to_user_nofault() were introduced
+ * in Linux 5.8, replacing probe_user_read()/probe_user_write(). This tree
+ * (5.4) only has the latter. Added to satisfy KernelSU-Next.
+ */
+static inline long copy_from_user_nofault(void *dst, const void __user *src, size_t size)
+{
+	return probe_user_read(dst, src, size);
+}
+
+static inline long copy_to_user_nofault(void __user *dst, const void *src, size_t size)
+{
+	return probe_user_write(dst, src, size);
+}
+
 extern long strncpy_from_unsafe(char *dst, const void *unsafe_addr, long count);
 long strncpy_from_user_nofault(char *dst, const void __user *unsafe_addr,
 				     long count);
