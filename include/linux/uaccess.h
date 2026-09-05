@@ -342,6 +342,16 @@ extern long notrace probe_kernel_write(void *dst, const void *src, size_t size);
 extern long notrace __probe_kernel_write(void *dst, const void *src, size_t size);
 
 /*
+ * Compat: copy_to_kernel_nofault() was introduced in Linux 5.8,
+ * replacing probe_kernel_write(). This tree (5.4) only has the latter.
+ * Added to satisfy KernelSU-Next.
+ */
+static inline int copy_to_kernel_nofault(void *dst, const void *src, size_t size)
+{
+	return (int)probe_kernel_write(dst, src, size);
+}
+
+/*
  * probe_user_write(): safely attempt to write to a location in user space
  * @dst: address to write to
  * @src: pointer to the data that shall be written
