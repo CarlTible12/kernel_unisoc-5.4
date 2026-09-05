@@ -4,8 +4,8 @@
 
 [submodule "KernelSU-Next"]
 	path = KernelSU-Next
-	url = https://github.com/maxsteeel/KernelSU-Next
-	branch = susfs-legacy-test
+	url = https://github.com/CarlTible12/KernelSU-Next
+	branch = susfs-legacy-test-carl
 [submodule "toolchain"]
 	path = toolchain
 	url = https://github.com/maxsteeel/proton-12
